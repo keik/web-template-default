@@ -238,4 +238,8 @@ module.exports = function(grunt) {
   grunt.registerTask('install', ['bower:dev', 'recess', 'modernizr:dev', 'jsdoc']);
   grunt.registerTask('build', ['clean', 'bower:dist', 'recess', 'modernizr:dist', 'copy', 'htmlmin', 'cssmin', 'uglify', 'jsdoc']);
 
+  // build test
+  grunt.registerTask('test', ['install', 'build']);
+
+
 };

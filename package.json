@@ -9,6 +9,9 @@
   "keywords": [
     "template"
   ],
+  "scripts": {
+    "test": "grunt test"
+  },
   "author": "keik <k4t0.kei@gmail.com>",
   "license": "MIT",
   "homepage": "https://github.com/keik/web-template-default",
