@@ -14,6 +14,7 @@ module.exports = function(grunt) {
     dir: {
       src: 'src/',
       dist: 'dist/',
+      docs: 'docs/',
       assets: ''
     },
 
@@ -41,12 +42,23 @@ module.exports = function(grunt) {
     },
 
     bower: {
-      install: {
+      options: {
+        layout: 'byComponent',
+        install: true,
+        cleanup: true
+      },
+      dev: {
         options: {
-          targetDir: '<%= dir.src %>vendor',
-          layout: 'byComponent',
-          install: true,
-          cleanup: true
+          targetDir: '<%= dir.src %>vendor/',
+          production: false
+        }
+      },
+      dist: {
+        options: {
+          targetDir: '<%= dir.dist %>vendor/',
+          bowerOptions: {
+            production: true
+          }
         }
       }
     },
@@ -55,7 +67,7 @@ module.exports = function(grunt) {
       options: {
         port: 9000,
         hostname: '0.0.0.0',
-        base: ['.']
+        base: ['src']
       },
       dev: {
         options: {
@@ -75,6 +87,45 @@ module.exports = function(grunt) {
 
             return middlewares;
           }
+        }
+      }
+    },
+
+    modernizr: {
+
+      dev: {
+        devFile: 'node_modules/grunt-modernizr/lib/modernizr-dev.js',
+        outputFile: '<%= bower.dev.options.targetDir %>modernizr/modernizr.js',
+        extra : {
+          shiv : true,
+          printshiv : false,
+          load : true,
+          mq : true,
+          cssclasses : true
+        },
+        uglify : false,
+        tests : ['touch'],
+        parseFiles : true,
+        files : {
+          src: ['<%= dir.src %>**/*.js', '<%= dir.src %>**/*.css']
+        }
+      },
+
+      dist: {
+        devFile: 'node_modules/grunt-modernizr/lib/modernizr-dev.js',
+        outputFile: '<%= bower.dist.options.targetDir %>modernizr/modernizr.js',
+        extra : {
+          shiv : true,
+          printshiv : false,
+          load : true,
+          mq : true,
+          cssclasses : true
+        },
+        uglify : true,
+        tests : ['touch'],
+        parseFiles : true,
+        files : {
+          src: ['<%= dir.dist %>**/*.js', '<%= dir.dist %>**/*.css']
         }
       }
     },
@@ -111,9 +162,14 @@ module.exports = function(grunt) {
         options: {
           compile: true
         },
-        src: ['<%= dir.src %><%= dir.assets %>less/main.less',
-              '<%= dir.src %><%= dir.assets %>less/icomoon.less'],
-        dest: '<%= dir.src %><%= dir.assets %>css/style.css'
+        files: [
+          {
+            '<%= dir.src %><%= dir.assets %>css/style.css': [
+              '<%= dir.src %><%= dir.assets %>less/main.less',
+              '<%= dir.src %><%= dir.assets %>less/icomoon.less'
+            ]
+          }
+        ]
       }
     },
 
@@ -121,14 +177,16 @@ module.exports = function(grunt) {
     // dist
 
     clean: {
-      dist: ['<%= dir.dist %>']
+      dev: ['<%= dir.src %><%= dir.assets %>css/', '<%= dir.src %><%= dir.assets %>vendor/'],
+      dist: ['<%= dir.dist %>'],
+      docs: ['<%= dir.docs %>']
     },
 
     htmlmin: {
       dist: {
         options: {
-          removeComments: true,
-          collapseWhitespace: true
+          removeComments: false,
+          collapseWhitespace: false
         },
         expand: true,
         cwd: '<%= dir.src %>',
@@ -152,24 +210,32 @@ module.exports = function(grunt) {
       },
       dist: {
         expand: true,
-        cwd: '<%= dir.src %><%= dir.assets %>',
+        cwd: '<%= dir.dist %><%= dir.assets %>',
         src: ['**/*.js'],
         dest: '<%= dir.dist %><%= dir.assets %>'
       }
     },
 
     copy: {
-      img: {
+      assets: {
         expand: true,
         cwd: '<%= dir.src %><%= dir.assets %>',
-        src: ['img/**', 'fonts/**'],
+        src: ['img/**', 'fonts/**', 'js/**', 'json/**'],
         dest: '<%= dir.dist %><%= dir.assets %>'
+      }
+    },
+
+    jsdoc: {
+      dist: {
+        src: ['<%= dir.src %><%= dir.assets %>js/**/*.js'],
+        dest: '<%= dir.docs %>js'
       }
     }
 
   });
 
   grunt.registerTask('default', ['connect:dev', 'watch']);
-  grunt.registerTask('build', ['bower', 'clean', 'recess', 'copy', 'htmlmin', 'cssmin', 'uglify']);
+  grunt.registerTask('install', ['bower:dev', 'recess', 'modernizr:dev', 'jsdoc']);
+  grunt.registerTask('build', ['clean', 'bower:dist', 'recess', 'modernizr:dist', 'copy', 'htmlmin', 'cssmin', 'uglify', 'jsdoc']);
 
 };
